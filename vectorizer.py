@@ -1,24 +1,62 @@
 import pandas as pd
-from pandas  import get_dummies
+from pandas import get_dummies
 import numpy as np
+import logging
 
-df = pd.read_csv("BlackFriday.csv")
-df.drop(['Product_Category_1', 'Product_Category_2', 'Product_Category_3'], axis=1, inplace=True)
+FORMAT = "[%(asctime)s] - [%(levelname)s] - [%(funcName)s] - %(message)s"
+logging.basicConfig(level=20, format=FORMAT)
 
-purchase_df = df[['User_ID', 'Product_ID']].groupby('User_ID')['Product_ID'].apply(list)
 
-df.drop('Product_ID', axis=1, inplace=True)
-max_purchase = max(df.Purchase)
-df['Purchase'] = df['Purchase'].apply(lambda k: k / max_purchase)
+def get_data():
+    df = pd.read_csv("BlackFriday.csv")
+    logging.info("Raw data loaded")
 
-dummies = get_dummies(df)
-dummies = dummies.groupby('User_ID').first()
+    df.drop(
+        ["Product_Category_1", "Product_Category_2", "Product_Category_3"],
+        axis=1,
+        inplace=True,
+    )
 
-vectors = {}
-for i, uid in enumerate(dummies.index):
-    vectors[uid] = np.array(dummies.iloc[i])
+    purchase_df = (
+        df[["User_ID", "Product_ID"]].groupby("User_ID")["Product_ID"].apply(list)
+    )
 
-print('User: 1000001 -> ', vectors[1000001])
-print("Purchases:")
-for item in purchase_df.loc[1000001]:
-    print(item)
+    df.drop("Product_ID", axis=1, inplace=True)
+    max_purchase = max(df.Purchase)
+    df["Purchase"] = df["Purchase"].apply(lambda k: k / max_purchase)
+
+    df["Occupation"] = df["Occupation"].astype(str)
+
+    dummies = get_dummies(df)
+    idx = dummies.groupby("User_ID")["Purchase"].transform(max) == dummies["Purchase"]
+    dummies = dummies[idx]
+
+    dummies.index = dummies.User_ID
+    dummies.drop("User_ID", inplace=True, axis=1)
+
+    logging.info("Data cleaned")
+
+    return purchase_df, dummies
+
+
+def get_vectors(df):
+    logging.info("Collecting vectors")
+    vectors = {}
+    for i, uid in enumerate(df.index):
+        vectors[uid] = np.array(df.iloc[i])
+    logging.info("Vectors ready")
+    return vectors
+
+
+def main():
+    purchase_df, user_df = get_data()
+    vectors = get_vectors(user_df)
+
+    print("User: 1000001 -> \n", vectors[1000001])
+    print("Purchases:")
+    for item in purchase_df.loc[1000001]:
+        print(item)
+
+
+if __name__ == "__main__":
+    main()
