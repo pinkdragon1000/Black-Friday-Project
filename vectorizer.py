@@ -22,14 +22,14 @@ def get_data():
     )
 
     df.drop("Product_ID", axis=1, inplace=True)
-    max_purchase = max(df.Purchase)
-    df["Purchase"] = df["Purchase"].apply(lambda k: k / max_purchase)
 
     df["Occupation"] = df["Occupation"].astype(str)
 
-    dummies = get_dummies(df)
-    idx = dummies.groupby("User_ID")["Purchase"].transform(max) == dummies["Purchase"]
-    dummies = dummies[idx]
+    gbc = list(df.columns[:-1])
+    grouped = df.groupby(gbc).sum().reset_index()
+    grouped['Purchase'] = grouped.Purchase / max(grouped.Purchase)
+
+    dummies = get_dummies(grouped)
 
     dummies.index = dummies.User_ID
     dummies.drop("User_ID", inplace=True, axis=1)
