@@ -27,7 +27,7 @@ def get_data():
 
     gbc = list(df.columns[:-1])
     grouped = df.groupby(gbc).sum().reset_index()
-    grouped['Purchase'] = grouped.Purchase / max(grouped.Purchase)
+    grouped["Purchase"] = grouped.Purchase / max(grouped.Purchase)
 
     dummies = get_dummies(grouped)
 
