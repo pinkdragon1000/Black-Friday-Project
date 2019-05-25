@@ -94,16 +94,8 @@ def test(purchase_df, vectors, limit=100, verbose=False):
         reco_list = recommend_products(user_id, purchase_df, vectors)
         actual_list = purchase_df.loc[int(user_id)]
 
-        pos_algo = 0
-        pos_rando = 0
-
-        for rec in reco_list:
-            if rec in actual_list:
-                pos_algo += 1
-
-        for pop in popular_products:
-            if pop in actual_list:
-                pos_rando += 1
+        pos_algo = len(set(actual_list).intersection(reco_list))
+        pos_rando = len(set(actual_list).intersection(popular_products))
 
         if verbose:
             if i % ten_per == 0:
