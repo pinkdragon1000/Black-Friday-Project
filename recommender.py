@@ -53,11 +53,13 @@ def get_closest(user_id, vectors, n=5):
     return candidates[:n]
 
 
-def recommend_products(user_id, purchase_df, vectors, n_products=100, n_similar_users=25):
+def recommend_products(
+    user_id, purchase_df, vectors, n_products=100, n_similar_users=25
+):
     top = get_closest(user_id, vectors, n=n_similar_users)
     top_ids = [k[1] for k in top]
     acc = [k[2] for k in top]
-    #print("Recommending with avg. similarity of {}".format(round(mean(acc), 2)))
+    # print("Recommending with avg. similarity of {}".format(round(mean(acc), 2)))
 
     products = []
     mini_df = purchase_df.loc[top_ids]
@@ -67,7 +69,9 @@ def recommend_products(user_id, purchase_df, vectors, n_products=100, n_similar_
     c = Counter()
     for prod in products:
         c[prod] += 1
-    return [x[0] for x in sorted(c.items(), key=lambda k: k[1], reverse=True)[:n_products]]
+    return [
+        x[0] for x in sorted(c.items(), key=lambda k: k[1], reverse=True)[:n_products]
+    ]
 
 
 def get_popular_products(product_df, n=100):
@@ -77,7 +81,9 @@ def get_popular_products(product_df, n=100):
     prod_freq = Counter()
     for p in prod_list:
         prod_freq[p] += 1
-    return [x[0] for x in sorted(prod_freq.items(), key=lambda k: k[1], reverse=True)[:n]]
+    return [
+        x[0] for x in sorted(prod_freq.items(), key=lambda k: k[1], reverse=True)[:n]
+    ]
 
 
 def test(purchase_df, vectors, limit=100, verbose=False):
@@ -99,25 +105,36 @@ def test(purchase_df, vectors, limit=100, verbose=False):
 
         if verbose:
             if i % ten_per == 0:
-                logging.info("{}% complete".format(round((i*10) / ten_per)))
-            #print("{} matches at {}%".format(pos_algo, (pos_algo * 100) / len(reco_list)))
+                logging.info("{}% complete".format(round((i * 10) / ten_per)))
+            # print("{} matches at {}%".format(pos_algo, (pos_algo * 100) / len(reco_list)))
         success_percentage.append(pos_algo / len(reco_list))
         popular_percentage.append(pos_rando / len(popular_products))
 
     print()
-    print("Average success rate of algorithm over {} trials: {}%".format(len(uids), round(mean(success_percentage) * 100), 4))
-    print("Average success rate of random over {} trials: {}%".format(len(uids), round(mean(popular_percentage) * 100), 4))
+    print(
+        "Average success rate of algorithm over {} trials: {}%".format(
+            len(uids), round(mean(success_percentage) * 100), 4
+        )
+    )
+    print(
+        "Average success rate of random over {} trials: {}%".format(
+            len(uids), round(mean(popular_percentage) * 100), 4
+        )
+    )
     print()
-
+    return success_percentage
 
 
 def main():
     from pprint import pprint
+    import matplotlib.pyplot as plt
 
     purchase_df, user_df = get_data()
     vectors = get_vectors(user_df)
-    test(purchase_df, vectors, limit=None, verbose=True)
-    #pprint(recommend_products(1000001, purchase_df, vectors))
+    sp = test(purchase_df, vectors, limit=None, verbose=True)
+    plt.hist(sp)
+    plt.show()
+    # pprint(recommend_products(1000001, purchase_df, vectors))
     # print(vectors[1000001])
     # sim = compare_all(vectors)
     # sim.sort(key=lambda k: k[2], reverse=True)
